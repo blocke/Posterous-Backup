@@ -87,6 +87,20 @@ def listOfPosterousFilesMentionedInXmlDir(dirname):
 		for url in urlList:
 			returnUrlList.append(url[:-1]) 
 	return returnUrlList
+
+def listOfOriginalPosterousFiles(urlList):
+	returnOrigUrlList = []
+
+	scaledRe = re.compile(r'.*\.(thumb|scaled[0-9]*)', re.I)
+	origRe = re.compile(r'(?P<origurl>.*)\.(thumb|scaled[0-9]*)', re.I)
+
+	for url in urlList:
+		if scaledRe.match(url):
+			origUrl = origRe.search(url).group('origurl')
+			if origUrl not in returnOrigUrlList:
+				print "orig file: %s" % origUrl
+				returnOrigUrlList.append(origUrl)
+	return returnOrigUrlList
 		
 def getPosterousFile(url):
 	urlDir = url.replace('http://posterous.com/getfile/', '', 1)
@@ -100,7 +114,7 @@ def getPosterousFile(url):
 	backupFilePath = os.path.join(fileBackupDir, fileName)
 	
 	if not os.path.isfile(backupFilePath):
-		message("getting read to download %s to %s" % (url, backupFilePath))
+		message("getting ready to download %s to %s" % (url, backupFilePath))
 		f = urllib2.urlopen(url)
 		lf = open(backupFilePath, 'w')
 		lf.write(f.read())
@@ -117,8 +131,8 @@ def main():
 	dirName = xmlBackupDirName()
 	saveXMLFilesToDirectory(dirName)
 	urlList = listOfPosterousFilesMentionedInXmlDir(dirName)
+	urlList.extend(listOfOriginalPosterousFiles(urlList))
 	for url in urlList:
 		getPosterousFile(url)
-	
 
 main()
