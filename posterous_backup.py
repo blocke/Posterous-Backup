@@ -83,7 +83,7 @@ def listOfPosterousFilesMentionedInXmlDir(dirname):
     for file in files:
         f= open(dirname+"/"+file, 'r')
         xml =  f.read()
-        urlList = re.findall(r'http\://posterous.com/getfile.*?[<\'\"]',xml)
+        urlList = re.findall(r'http://getfile.*?\.posterous\.com/getfile/.*?[<\'\"]',xml)
         for url in urlList:
             returnUrlList.append(url[:-1]) 
     return returnUrlList
@@ -103,7 +103,7 @@ def listOfOriginalPosterousFiles(urlList):
     return returnOrigUrlList
         
 def getPosterousFile(url):
-    urlDir = url.replace('http://posterous.com/getfile/', '', 1)
+    urlDir = re.sub(r'http://getfile.*?\.posterous\.com/getfile/', '', url)
     dirList = urlDir.split("/")
     fileName = dirList.pop()
     fileBackupDir = os.path.join(BACKUP_DIR_PATH, BACKUP_FILES_DIR_NAME)
@@ -115,11 +115,14 @@ def getPosterousFile(url):
     
     if not os.path.isfile(backupFilePath):
         message("getting ready to download %s to %s" % (url, backupFilePath))
-        f = urllib2.urlopen(url)
-        lf = open(backupFilePath, 'w')
-        lf.write(f.read())
-        lf.close()
-        message("done")
+        try:
+            f = urllib2.urlopen(url)
+            lf = open(backupFilePath, 'w')
+            lf.write(f.read())
+            lf.close()
+            message("done")
+        except urllib2.HTTPError as httperror:
+            print "Download failed: %s" % (httperror)
     else:
         message("file exists, skipping %s" % backupFilePath)
                 
